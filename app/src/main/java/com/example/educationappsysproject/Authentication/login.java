@@ -1,10 +1,13 @@
 package com.example.educationappsysproject.Authentication;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -12,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,6 +24,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.educationappsysproject.R;
 import com.example.educationappsysproject.homepage.homeScreen;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
@@ -31,7 +37,7 @@ import java.util.EventListener;
 
 public class login extends AppCompatActivity {
 
-    TextView goSignUp;
+    TextView goSignUp, forgotPass;
     FirebaseAuth fAuth;
     ProgressBar progressBar;
     TextInputEditText email, password;
@@ -48,6 +54,7 @@ public class login extends AppCompatActivity {
         password=findViewById(R.id.signInPassword);
         signIn=findViewById(R.id.signIn);
         goSignUp=findViewById(R.id.toSignUP);
+        forgotPass=findViewById(R.id.forgotPassword);
         signIn.setOnClickListener(v->{
             String Remail = email.getText().toString().trim();
             String Rpassword = password.getText().toString().trim();
@@ -91,7 +98,37 @@ public class login extends AppCompatActivity {
             finish();
         });
 
+        forgotPass.setOnClickListener(v->{
+            EditText resetMail=new EditText(v.getContext());
+            AlertDialog.Builder passwordResetDialog= new AlertDialog.Builder(v.getContext());
+            passwordResetDialog.setTitle("Reset Password");
+            passwordResetDialog.setMessage("Enter your email to receive reset link ");
+            passwordResetDialog.setView(resetMail);
+            passwordResetDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                String mail= resetMail.getText().toString();
+                fAuth.sendPasswordResetEmail(mail).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        Toast.makeText(login.this,"reset Link is sent to email",Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(login.this,"error ! reset link is not sent"+e.getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                });
+                }
+            });
+            passwordResetDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
 
+                }
+            });
+            passwordResetDialog.create().show();
+        });
 
     }
 }

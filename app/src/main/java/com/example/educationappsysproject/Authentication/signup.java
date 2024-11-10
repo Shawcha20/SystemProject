@@ -49,8 +49,6 @@ public class signup extends AppCompatActivity {
     Drawable drawable;
     FirebaseUser firebaseUser;
     FirebaseFirestore fStore;
-    FirebaseDatabase db;
-    DatabaseReference reference;
     String userId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +108,10 @@ public class signup extends AppCompatActivity {
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if(task.isSuccessful())
                     {
+
+
+
+
                         Toast.makeText(signup.this,"Signed up", Toast.LENGTH_SHORT).show();
                         userId=fAuth.getCurrentUser().getUid();
                         DocumentReference documentReference=fStore.collection("users").document(userId);
