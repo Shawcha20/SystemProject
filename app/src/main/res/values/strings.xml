@@ -28,7 +28,8 @@
     <string name="hello_message">Hello Roger</string>
     <string name="percentage_course">%1$d%% Completed</string>
     <string name="email">Email</string>
-
+    <string name="nav_open">Open Navigation Drawer</string>
+    <string name="nav_close">Close Navigation Drawer</string>
     <string name="text_see_more">See All</string>
     <string name="imageAccess">Image</string>
     <string name="message_banner">Refer your friends and\n earn free course *</string>

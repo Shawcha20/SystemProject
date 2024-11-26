@@ -1,9 +1,13 @@
 package com.example.educationappsysproject.Authentication;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.nfc.Tag;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +27,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.educationappsysproject.R;
 import com.example.educationappsysproject.homepage.homeScreen;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
@@ -50,6 +55,8 @@ public class signup extends AppCompatActivity {
     FirebaseUser firebaseUser;
     FirebaseFirestore fStore;
     String userId;
+    Handler handler;
+    Runnable verificationCheckRunnable;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +71,10 @@ public class signup extends AppCompatActivity {
         fAuth= FirebaseAuth.getInstance();
         fStore=FirebaseFirestore.getInstance();
         register=findViewById(R.id.signUpBtn);
+
+
+        // email verification
+        handler = new Handler(Looper.getMainLooper());
       //  db=FirebaseDatabase.getInstance();
         if(fAuth.getCurrentUser() !=null)
         {
@@ -108,9 +119,19 @@ public class signup extends AppCompatActivity {
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if(task.isSuccessful())
                     {
-
-
-
+                        firebaseUser= fAuth.getCurrentUser();
+                        firebaseUser.sendEmailVerification().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void unused) {
+                                Toast.makeText(signup.this, "verification email has been sent", Toast.LENGTH_SHORT).show();
+                                startEmailVerificationCheck();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d("tag", "onFailure: ");
+                            }
+                        });
 
                         Toast.makeText(signup.this,"Signed up", Toast.LENGTH_SHORT).show();
                         userId=fAuth.getCurrentUser().getUid();
@@ -143,4 +164,39 @@ public class signup extends AppCompatActivity {
             finish();
         });
     }
+    private void startEmailVerificationCheck() {
+        verificationCheckRunnable = new Runnable() {
+            @Override
+            public void run() {
+                firebaseUser = fAuth.getCurrentUser();
+                if (firebaseUser != null) {
+                    firebaseUser.reload(); // Reload the user data
+
+                    if (firebaseUser.isEmailVerified()) {
+                        Toast.makeText(signup.this, "Email verified! Redirecting to home screen.", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                        Intent intent = new Intent(getApplicationContext(), homeScreen.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        // Retry after 3 seconds
+                        handler.postDelayed(verificationCheckRunnable, 3000);
+                    }
+                }
+            }
+        };
+
+        // Start the runnable to check email verification
+        handler.post(verificationCheckRunnable);
+    }
+
+    // Stop checking for email verification if the user leaves the screen
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (handler != null && verificationCheckRunnable != null) {
+            handler.removeCallbacks(verificationCheckRunnable);
+        }
+    }
 }
+

@@ -30,6 +30,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import org.w3c.dom.Text;
 
@@ -55,6 +56,13 @@ public class login extends AppCompatActivity {
         signIn=findViewById(R.id.signIn);
         goSignUp=findViewById(R.id.toSignUP);
         forgotPass=findViewById(R.id.forgotPassword);
+        FirebaseUser currentUser = fAuth.getCurrentUser();
+        if (currentUser != null) {
+            // User is logged in, redirect to homeScreen
+            startActivity(new Intent(login.this, homeScreen.class));
+            finish();
+            return;
+        }
         signIn.setOnClickListener(v->{
             String Remail = email.getText().toString().trim();
             String Rpassword = password.getText().toString().trim();
