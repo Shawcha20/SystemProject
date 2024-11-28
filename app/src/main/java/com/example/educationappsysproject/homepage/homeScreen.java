@@ -24,6 +24,8 @@ public class homeScreen extends AppCompatActivity {
         setContentView(R.layout.activity_home_screen);
         Button logout=findViewById(R.id.logOut);
     }
+    //button video;
+    //button pdf;
     public void logout(View view)
     {
         FirebaseAuth.getInstance().signOut();
