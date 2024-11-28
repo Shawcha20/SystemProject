@@ -76,7 +76,7 @@
                     android:drawableStart="@drawable/graduated_resized"
                     android:fontFamily="@font/bariol_regular"
                     android:hint="Enter StudentId"
-                    android:inputType="textEmailAddress"
+                    android:inputType="number"
                     android:textColor="@color/colorPrimary"
                     android:textStyle="bold" />
 
