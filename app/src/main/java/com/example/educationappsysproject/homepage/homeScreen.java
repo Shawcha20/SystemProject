@@ -131,7 +131,7 @@ public class homeScreen extends AppCompatActivity implements NavigationView.OnNa
         }
         else if(getUid == R.id.nav_user){
 
-            Intent i = new Intent(homeScreen.this, signup.class);
+            Intent i = new Intent(homeScreen.this, userDeatils.class);
             startActivity(i);
 
 
