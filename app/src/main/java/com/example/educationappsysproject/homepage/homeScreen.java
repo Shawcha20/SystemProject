@@ -186,5 +186,6 @@ public class homeScreen extends AppCompatActivity implements NavigationView.OnNa
         }
         super.onBackPressed(); // Call the default behavior after handling your logic.
     }
+    // i guess everything will work now
 
 }
