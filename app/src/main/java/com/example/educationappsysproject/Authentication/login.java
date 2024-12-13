@@ -1,10 +1,12 @@
 package com.example.educationappsysproject.Authentication;
 
-import android.app.Dialog;
+import static android.content.ContentValues.TAG;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,11 +19,9 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.educationappsysproject.R;
+import com.example.educationappsysproject.admin.adminHomePage;
 import com.example.educationappsysproject.homepage.homeScreen;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -31,10 +31,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-import org.w3c.dom.Text;
-
-import java.util.EventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class login extends AppCompatActivity {
 
@@ -44,6 +43,7 @@ public class login extends AppCompatActivity {
     TextInputEditText email, password;
     Button signIn;
     TextView frgtPass;
+    FirebaseFirestore fStore;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,10 +58,9 @@ public class login extends AppCompatActivity {
         forgotPass=findViewById(R.id.forgotPassword);
         FirebaseUser currentUser = fAuth.getCurrentUser();
         if (currentUser != null) {
-            // User is logged in, redirect to homeScreen
-            startActivity(new Intent(login.this, homeScreen.class));
-            finish();
-            return;
+            // User is logged in, check their access level
+            checkUserAccessLevel(currentUser.getUid());
+            return; // Avoid further execution of onCreate
         }
         signIn.setOnClickListener(v->{
             String Remail = email.getText().toString().trim();
@@ -90,9 +89,10 @@ public class login extends AppCompatActivity {
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if(task.isSuccessful())
                     {
-                        Toast.makeText(login.this, "user logged in",Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(getApplicationContext(), homeScreen.class));
-                        finish();
+
+                        checkUserAccessLevel( fAuth.getCurrentUser().getUid());
+                       // startActivity(new Intent(getApplicationContext(), homeScreen.class));
+                      //  finish();
                     }
                     else {
                         Toast.makeText(login.this, "error"+task.getException().getMessage(),Toast.LENGTH_SHORT).show();
@@ -138,5 +138,50 @@ public class login extends AppCompatActivity {
             passwordResetDialog.create().show();
         });
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(FirebaseAuth.getInstance().getCurrentUser()!=null)
+        {
+            startActivity( new Intent(getApplicationContext(), login.class));
+            finish();
+        }
+    }
+    private void checkUserAccessLevel(String uid) {
+        // Check if fStore is initialized
+        fStore = FirebaseFirestore.getInstance();
+        if (fStore == null) {
+            Log.e(TAG, "Firestore is not initialized");
+            Toast.makeText(login.this, "An error occurred. Please try again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Fetch user document from Firestore
+        DocumentReference df = fStore.collection("users").document(uid);
+        df.get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    Log.d(TAG, "onSuccess: " + documentSnapshot.getData());
+                    Boolean checkLevel = documentSnapshot.getBoolean("checkLevel");
+
+                    // Handle access level
+                    if (checkLevel != null && checkLevel) {
+                        // Navigate to admin home page
+                        Toast.makeText(login.this, "Admin logged in",Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(getApplicationContext(), adminHomePage.class));
+                        finish();
+                    } else {
+                        // Navigate to regular home screen
+                        Toast.makeText(login.this, "user logged in",Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(getApplicationContext(), homeScreen.class));
+                        finish();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    // Log and handle the error
+                    Log.e(TAG, "Error fetching document: " + e.getMessage());
+                    Toast.makeText(login.this, "Failed to verify access level. Please try again.", Toast.LENGTH_SHORT).show();
+                });
     }
 }
